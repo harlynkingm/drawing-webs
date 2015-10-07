@@ -130,9 +130,41 @@ $(document).ready(function () {
         refresh();
     });
     
+    canvas.addEventListener("touchstart", function(event){
+        var touchPoint = new point(event.touches[0].clientX, event.touches[0].clientY - TOP);
+        var add = true;
+        for (i = 0; i < points.length; i++){
+            if (distance(touchPoint, points[i]) < 5){
+                add = false;
+                editpoint = points[i];
+                origMousePos = touchPoint;
+            }
+        }
+        if (add){
+            newPoint(event);
+            origMousePos = touchPoint;
+        }
+        refresh();
+    });
+    
     canvas.addEventListener("mousemove", function(event){
         if (editpoint != null){
             var mousePoint = new point(event.clientX, event.clientY - TOP);
+            editpoint.x += (mousePoint.x - origMousePos.x);
+            editpoint.y += (mousePoint.y - origMousePos.y);
+            if (editpoint.twin != null){
+                editpoint.twin.x -= (mousePoint.x - origMousePos.x);
+                editpoint.twin.y += (mousePoint.y - origMousePos.y);
+            }
+            origMousePos = mousePoint;
+            refresh();
+        }
+    });
+    
+    canvas.addEventListener("touchmove", function(event){
+        event.preventDefault();
+        if (editpoint != null){
+            var mousePoint = new point(event.touches[0].clientX, event.touches[0].clientY - TOP);
             editpoint.x += (mousePoint.x - origMousePos.x);
             editpoint.y += (mousePoint.y - origMousePos.y);
             if (editpoint.twin != null){
@@ -151,6 +183,13 @@ $(document).ready(function () {
         }
     });
     
+    canvas.addEventListener("touchend", function(event){
+        if (editpoint != null){
+            editpoint = null;
+            origMousePos = null;
+        }
+    });
+    
     function newPoint(event){
         var centerX = canvas.width/2;
         var distX = Math.abs(event.clientX - centerX);
@@ -160,12 +199,12 @@ $(document).ready(function () {
         if (mirrored){
             if (event.clientX > centerX){
                 var point2 = new point(centerX - distX, valY, 2);
-                point2.twin = point;
+                point2.twin = newPoint;
                 points.push(point2);
             }
             else{
                 var point2 = new point(centerX + distX, valY, 2);
-                point2.twin = point;
+                point2.twin = newPoint;
                 points.push(point2);
             }
             newPoint.twin = point2;
@@ -199,4 +238,23 @@ $(document).ready(function () {
     
     document.getElementById('mirroring').onclick = toggleLine;
     document.getElementById('clear').onclick = startover;
+    
+    function downloadCanvas(){
+        var link = document.getElementById('download');
+        link.href = document.getElementById('main').toDataURL();
+        link.download = 'drawing.png';
+    }
+    
+    document.getElementById('download').addEventListener('click', function(){
+        if (mirrored){
+            var wasmirrored = true;
+            mirrored = false;
+            refresh();
+        }
+        downloadCanvas();
+        if (wasmirrored){
+            mirrored = true;
+            refresh();
+        }
+    }, false);
 });
