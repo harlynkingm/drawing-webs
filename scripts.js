@@ -10,6 +10,11 @@ function line(p1, p2){
     this.p2 = p2;
 }
 
+function historyEvent(){
+    this.pointsAdded = 0;
+    this.linesAdded = 0;
+}
+
 $(document).ready(function () {
     var canvas = document.getElementById('main');
     var TOP = canvas.offsetTop;
@@ -22,6 +27,8 @@ $(document).ready(function () {
     context.lineWidth = 5;
     var points = new Array();
     var lines = new Array();
+    var history = new Array();
+    var currentEvent = new historyEvent();
     var mirrored = true;
     var editpoint = null;
     var origMousePos = null;
@@ -85,6 +92,7 @@ $(document).ready(function () {
         var closest = findClosest(point);
         for (i = 0; i < closest.length; i++){
             var newLine = new line(point, closest[i]);
+            currentEvent.linesAdded += 1;
             lines.push(newLine);
         }
     }
@@ -180,6 +188,8 @@ $(document).ready(function () {
         if (editpoint != null){
             editpoint = null;
             origMousePos = null;
+            history.push(currentEvent);
+            currentEvent = new historyEvent();
         }
     });
     
@@ -187,6 +197,8 @@ $(document).ready(function () {
         if (editpoint != null){
             editpoint = null;
             origMousePos = null;
+            history.push(currentEvent);
+            currentEvent = new historyEvent();
         }
     });
     
@@ -196,16 +208,19 @@ $(document).ready(function () {
         var valY = event.clientY - TOP;
         var newPoint = new point(event.clientX, valY, 2);
         points.push(newPoint);
+        currentEvent.pointsAdded += 1;
         if (mirrored){
             if (event.clientX > centerX){
                 var point2 = new point(centerX - distX, valY, 2);
                 point2.twin = newPoint;
                 points.push(point2);
+                currentEvent.pointsAdded += 1;
             }
             else{
                 var point2 = new point(centerX + distX, valY, 2);
                 point2.twin = newPoint;
                 points.push(point2);
+                currentEvent.pointsAdded += 1;
             }
             newPoint.twin = point2;
         }
@@ -257,4 +272,18 @@ $(document).ready(function () {
             refresh();
         }
     }, false);
+    
+    function undo(){
+        var undidEvent = history[history.length - 1];
+        for (i = 0; i < undidEvent.pointsAdded; i++){
+            points.pop();
+        }
+        for (i = 0; i < undidEvent.linesAdded; i++){
+            lines.pop();
+        }
+        history.pop();
+        refresh();
+    }
+    
+    document.getElementById('undo').onclick = undo;
 });
