@@ -1,0 +1,18 @@
+#main{
+    width: 100%;
+    height: calc(100% - 39px);
+    background-color: #eee;
+}
+
+body{
+    margin: 0 auto;
+}
+
+button{
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+#head{
+    padding-left: 20px;
+}
