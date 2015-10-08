@@ -72,6 +72,8 @@ $(document).ready(function () {
     function startover(){
         points = new Array();
         lines = new Array();
+        var history = new Array();
+        var currentEvent = new historyEvent();
         refresh();
     }
     
@@ -118,7 +120,12 @@ $(document).ready(function () {
                 secondIndex = i;
             }
         }
-        return [points[firstIndex], points[secondIndex]];
+        if (points[firstIndex] == points[secondIndex]){
+            return [points[firstIndex]];
+        }
+        else{
+            return [points[firstIndex], points[secondIndex]];
+        }
     }
     
     canvas.addEventListener("mousedown", function(event){
@@ -206,18 +213,18 @@ $(document).ready(function () {
         var centerX = canvas.width/2;
         var distX = Math.abs(event.clientX - centerX);
         var valY = event.clientY - TOP;
-        var newPoint = new point(event.clientX, valY, 2);
+        var newPoint = new point(event.clientX, valY, 1);
         points.push(newPoint);
         currentEvent.pointsAdded += 1;
         if (mirrored){
             if (event.clientX > centerX){
-                var point2 = new point(centerX - distX, valY, 2);
+                var point2 = new point(centerX - distX, valY, 1);
                 point2.twin = newPoint;
                 points.push(point2);
                 currentEvent.pointsAdded += 1;
             }
             else{
-                var point2 = new point(centerX + distX, valY, 2);
+                var point2 = new point(centerX + distX, valY, 1);
                 point2.twin = newPoint;
                 points.push(point2);
                 currentEvent.pointsAdded += 1;
@@ -274,15 +281,17 @@ $(document).ready(function () {
     }, false);
     
     function undo(){
-        var undidEvent = history[history.length - 1];
-        for (i = 0; i < undidEvent.pointsAdded; i++){
-            points.pop();
+        if (history.length > 0){
+            var undidEvent = history[history.length - 1];
+            for (i = 0; i < undidEvent.pointsAdded; i++){
+                points.pop();
+            }
+            for (i = 0; i < undidEvent.linesAdded; i++){
+                lines.pop();
+            }
+            history.pop();
+            refresh();
         }
-        for (i = 0; i < undidEvent.linesAdded; i++){
-            lines.pop();
-        }
-        history.pop();
-        refresh();
     }
     
     document.getElementById('undo').onclick = undo;
